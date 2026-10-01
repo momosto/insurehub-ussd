@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push: { branches: [main] }
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { global-json-file: global.json }
+      - run: dotnet restore
+      - run: dotnet build --no-restore -c Release -warnaserror
+      - name: Tests (menu graph, 182-char screen property in EN/SN/ND, flows, resilience, Redis via Testcontainers)
+        run: dotnet test --no-build -c Release --logger trx --results-directory TestResults
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: test-results, path: TestResults }
+
+  image:
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/insurehub-ussd:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/insurehub-ussd:latest
+      - name: Trivy scan (fail on fixable criticals)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/insurehub-ussd:${{ github.sha }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

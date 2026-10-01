@@ -1,0 +1,57 @@
+{
+  "start": "main",
+  "nodes": {
+    "main": { "type": "menu", "text": "main.title", "options": {
+      "1": { "label": "main.policies", "to": "policies.pin" },
+      "2": { "label": "main.pay", "to": "pay.pin" },
+      "3": { "label": "main.claims", "to": "claims.pin" },
+      "4": { "label": "main.loan", "to": "loan.pin" },
+      "5": { "label": "main.callback", "to": "callback.reason" },
+      "6": { "label": "main.language", "to": "language" },
+      "0": { "label": "main.help", "to": "help" } } },
+
+    "policies.pin": { "type": "pin", "next": "policies.list" },
+    "policies.list": { "type": "list", "text": "policies.list", "handler": "Policies", "next": "policies.detail" },
+    "policies.detail": { "type": "view", "text": "policies.detail", "handler": "PolicyDetail", "end": true },
+
+    "pay.pin": { "type": "pin", "next": "pay.list" },
+    "pay.list": { "type": "list", "text": "pay.list", "handler": "Policies", "next": "pay.amount" },
+    "pay.amount": { "type": "menu", "text": "pay.amount", "handler": "PremiumAmount", "options": {
+      "1": { "label": "pay.full", "to": "pay.confirm", "set": { "amount": "{item.due}" } },
+      "2": { "label": "pay.other", "to": "pay.other" },
+      "0": { "label": "common.back", "to": "main" } } },
+    "pay.other": { "type": "input", "text": "pay.other.prompt", "var": "amount", "validate": "amount", "next": "pay.confirm" },
+    "pay.confirm": { "type": "menu", "text": "pay.confirm", "options": {
+      "1": { "label": "common.yes", "to": "pay.execute" },
+      "2": { "label": "common.no", "to": "cancelled" } } },
+    "pay.execute": { "type": "action", "handler": "StartPremiumPayment" },
+
+    "claims.pin": { "type": "pin", "next": "claims.view" },
+    "claims.view": { "type": "view", "text": "claims.view", "handler": "Claims", "end": true },
+
+    "loan.pin": { "type": "pin", "next": "loan.view" },
+    "loan.view": { "type": "menu", "text": "loan.view", "handler": "LoanSummary", "options": {
+      "1": { "label": "loan.pay", "to": "loan.confirm", "set": { "amount": "{loan.next}" } },
+      "0": { "label": "common.back", "to": "main" } } },
+    "loan.confirm": { "type": "menu", "text": "loan.confirm", "options": {
+      "1": { "label": "common.yes", "to": "loan.execute" },
+      "2": { "label": "common.no", "to": "cancelled" } } },
+    "loan.execute": { "type": "action", "handler": "StartLoanPayment" },
+
+    "callback.reason": { "type": "menu", "text": "callback.title", "options": {
+      "1": { "label": "callback.claim", "to": "callback.execute", "set": { "reason": "claim" } },
+      "2": { "label": "callback.payment", "to": "callback.execute", "set": { "reason": "payment" } },
+      "3": { "label": "callback.other", "to": "callback.execute", "set": { "reason": "other" } },
+      "0": { "label": "common.back", "to": "main" } } },
+    "callback.execute": { "type": "action", "handler": "RequestCallback" },
+
+    "language": { "type": "menu", "text": "language.title", "options": {
+      "1": { "label": "language.en", "to": "language.saved", "set": { "language": "en" } },
+      "2": { "label": "language.sn", "to": "language.saved", "set": { "language": "sn" } },
+      "3": { "label": "language.nd", "to": "language.saved", "set": { "language": "nd" } } } },
+    "language.saved": { "type": "action", "handler": "SetLanguage" },
+
+    "help": { "type": "end", "text": "help.text" },
+    "cancelled": { "type": "end", "text": "common.cancelled" }
+  }
+}

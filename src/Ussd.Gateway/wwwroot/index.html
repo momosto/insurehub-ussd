@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InsureHub *263# simulator</title>
+  <style>
+    :root { --bg: #eef1f5; --ink: #1d2433; --muted: #5b6475; --phone: #20242c; --screen: #c9d8b6; --accent: #0f766e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+    .banner { background: #fff4ce; color: #5c4400; text-align: center; font-size: 13px; padding: 5px 16px; }
+    main { max-width: 980px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 340px 1fr; gap: 28px; }
+    @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+    .phone { background: var(--phone); border-radius: 36px; padding: 28px 22px 26px; box-shadow: 0 12px 30px rgba(0,0,0,.25); }
+    .screen { background: var(--screen); border-radius: 8px; min-height: 250px; padding: 12px; font: 15px/1.35 "Courier New", monospace;
+              white-space: pre-wrap; word-break: break-word; color: #17210f; display: flex; flex-direction: column; }
+    .screen .text { flex: 1; }
+    .screen .count { font-size: 11px; color: #4b5a3a; text-align: right; }
+    .entry { margin-top: 10px; display: flex; gap: 6px; }
+    .entry input { flex: 1; font: 18px monospace; padding: 8px; border-radius: 6px; border: 0; }
+    .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+    button { border: 0; border-radius: 10px; padding: 12px 0; font-size: 18px; background: #3a404c; color: #fff; cursor: pointer; }
+    button.send { background: #15803d; } button.end { background: #b91c1c; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .side h1 { font-size: 22px; margin: 0 0 6px; } .side p { color: var(--muted); margin: 0 0 14px; }
+    .card { background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.06); margin-bottom: 14px; }
+    select, .card button { font-size: 14px; padding: 8px; border-radius: 8px; }
+    .card button { background: var(--accent); padding: 8px 12px; font-size: 14px; }
+    .sms { font-size: 13px; border-left: 3px solid var(--accent); padding: 4px 8px; margin: 6px 0; background: #f6fbfa; }
+    code { background: #eef1f5; padding: 1px 4px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div class="banner">Fictional demo — InsureHub Group is not a real insurer. Do not enter real personal data.</div>
+<main>
+  <section>
+    <div class="phone">
+      <div class="screen" aria-live="polite"><div class="text" id="screen">Dial *263# to start.</div><div class="count" id="count"></div></div>
+      <div class="entry"><input id="input" inputmode="numeric" autocomplete="off" aria-label="Reply"></div>
+      <div class="keys" id="keys"></div>
+      <div class="row"><button class="send" id="send">Send / Dial</button><button class="end" id="end">End</button></div>
+    </div>
+  </section>
+  <section class="side">
+    <h1>InsureHub <code>*263#</code></h1>
+    <p>Feature-phone self-service over the same core APIs as the web portal and WhatsApp. Screens are capped at 182 characters.</p>
+    <div class="card">
+      <label for="who"><strong>Dial as</strong></label><br>
+      <select id="who">
+        <option value="263733456789">Farai — lapsed kombi policy</option>
+        <option value="263772123456">Tendai — Hilux claim under review</option>
+        <option value="263779000111">Mai Chipo — trader loan</option>
+        <option value="263788112233">Chipo — funeral plan in ZWG</option>
+        <option value="263712987654">Nyasha — recent SIM swap (payments blocked)</option>
+        <option value="263771999888">Unregistered number</option>
+      </select>
+    </div>
+    <div class="card">
+      <strong>Backend chaos</strong> (show the 2-second budget)<br>
+      <button onclick="chaos('delayMs=0&down=false')">Normal</button>
+      <button onclick="chaos('delayMs=1700')">Slow (1.7 s)</button>
+      <button onclick="chaos('down=true')">Down</button>
+      <div id="chaosState" style="font-size:12px;color:#5b6475;margin-top:6px"></div>
+    </div>
+    <div class="card"><strong>SMS inbox</strong> (OTPs, receipts, call-back confirmations)<div id="sms"></div></div>
+  </section>
+</main>
+<script>
+  const screen = document.getElementById("screen"), count = document.getElementById("count"), input = document.getElementById("input");
+  const who = document.getElementById("who");
+  let sessionId = null, history = [];
+  const keys = document.getElementById("keys");
+  "123456789*0#".split("").forEach(k => {
+    const b = document.createElement("button"); b.textContent = k; b.onclick = () => { input.value += k; input.focus(); }; keys.appendChild(b);
+  });
+  function show(text) { screen.textContent = text; count.textContent = text.length + " / 182"; }
+  async function hop(text) {
+    const body = new URLSearchParams({ sessionId, phoneNumber: who.value, serviceCode: "*263#", networkCode: "64804", text });
+    const started = performance.now();
+    const r = await fetch("/simulator/ussd", { method: "POST", body });
+    const raw = await r.text();
+    const ms = Math.round(performance.now() - started);
+    const ended = raw.startsWith("END ");
+    show(raw.substring(4) + (ended ? "\n\n[session ended]" : ""));
+    count.textContent += " · " + ms + " ms";
+    if (ended) sessionId = null;
+    loadSms();
+  }
+  document.getElementById("send").onclick = async () => {
+    if (!sessionId) { sessionId = "sim-" + crypto.randomUUID(); history = []; input.value = ""; await hop(""); return; }
+    history.push(input.value.trim()); input.value = "";
+    await hop(history.join("*"));
+  };
+  document.getElementById("end").onclick = () => { sessionId = null; history = []; show("Dial *263# to start."); };
+  input.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("send").click(); });
+  who.onchange = () => { sessionId = null; show("Dial *263# to start."); loadSms(); };
+  async function loadSms() {
+    const r = await fetch("/simulator/sms?msisdn=" + who.value);
+    const items = await r.json();
+    const box = document.getElementById("sms"); box.replaceChildren();
+    items.slice(-6).reverse().forEach(m => { const d = document.createElement("div"); d.className = "sms"; d.textContent = m.text; box.appendChild(d); });
+  }
+  async function chaos(q) {
+    const r = await fetch("/simulator/chaos?" + q, { method: "POST" });
+    const s = await r.json();
+    document.getElementById("chaosState").textContent = "delay " + s.delayMs + " ms · down: " + s.down;
+  }
+  loadSms();
+</script>
+</body>
+</html>

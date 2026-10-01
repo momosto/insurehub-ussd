@@ -1,0 +1,13 @@
+# USSD gateway + Redis. Simulator: http://localhost:5300  ·  aggregator callback: POST /ussd with X-Ussd-Secret
+services:
+  redis:
+    image: redis:7-alpine
+  ussd:
+    build: .
+    ports: ["5300:5300"]
+    environment:
+      Redis__ConnectionString: redis:6379
+      Ussd__CallbackSecret: compose-only-ussd-secret
+      Simulator__Enabled: "true"
+      Core__Mode: fixtures            # "http" + Core__LendHubUrl etc. for the real core systems
+    depends_on: [redis]

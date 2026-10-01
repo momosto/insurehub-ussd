@@ -24,7 +24,7 @@ The gateway **does not** rebuild state from `text` alone. It keeps a server-side
 
 ## 3. Menu engine
 
-Menus are declared as data (`menus/*.json`): nodes with a type (`menu`, `input`, `pin`, `confirm`, `action`, `end`), localised text keys, validation, transitions and an optional handler.
+Menus are declared as data (`src/Ussd.Gateway/data/menus/*.json`): nodes with a type (`menu`, `input`, `pin`, `confirm`, `action`, `end`), localised text keys, validation, transitions and an optional handler.
 
 ```json
 { "id": "pay.confirm", "type": "confirm",
@@ -34,7 +34,7 @@ Menus are declared as data (`menus/*.json`): nodes with a type (`menu`, `input`,
 ```
 
 - A `MenuRuntime` walks the graph; handlers are small C# classes (`IMenuHandler`) that call the APIs.
-- Localised strings live in resx files (EN/SN/ND); a build-time check fails if any key is missing in any language or any rendered screen goes over 182 characters with realistic data.
+- Localised strings live in JSON tables (`data/i18n`, EN/SN/ND — ADR-0003); a startup and test-time check fails if any key is missing in any language or any rendered screen goes over 182 characters with realistic data.
 - Adding a menu means changing data and one handler, with no changes to the engine.
 
 ## 4. Session
