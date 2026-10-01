@@ -38,6 +38,7 @@ Aggregator callback: `POST /ussd` (form `sessionId`, `phoneNumber`, `text`, `ser
 | Testing | [docs/05-test-strategy.md](docs/05-test-strategy.md) |
 | Delivery | [docs/06-delivery-plan.md](docs/06-delivery-plan.md), [CHANGELOG.md](CHANGELOG.md) |
 | Verification | [docs/07-traceability.md](docs/07-traceability.md) |
+| Test cases | [docs/09-test-cases.md](docs/09-test-cases.md): every test case with its requirement and last result |
 | Operations | [docs/08-operations.md](docs/08-operations.md) |
 
 ## Planning pack (original)
