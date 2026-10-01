@@ -9,7 +9,7 @@ spec:
   template:
     metadata: { labels: { app.kubernetes.io/name: insurehub-ussd, app.kubernetes.io/part-of: insurehub } }
     spec:
-      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      securityContext: { runAsNonRoot: true, runAsUser: 1654, runAsGroup: 1654, seccompProfile: { type: RuntimeDefault } }   # "app" in the .NET image
       containers:
         - name: ussd
           image: ghcr.io/momosto/insurehub-ussd:latest

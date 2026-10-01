@@ -9,7 +9,7 @@ RUN dotnet publish src/Ussd.Gateway/Ussd.Gateway.csproj -c Release -o /app --no-
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app .
-USER app
+USER 1654
 ENV ASPNETCORE_URLS=http://+:5300 DOTNET_gcServer=0
 EXPOSE 5300
 ENTRYPOINT ["dotnet", "Ussd.Gateway.dll"]
